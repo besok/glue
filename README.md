@@ -1,1 +1,1 @@
-# Glue - Lua compiler
+# Goll - Go compiler with LLVM backend
