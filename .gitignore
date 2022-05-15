@@ -65,3 +65,4 @@ test/test_runner
 **/.antlr/
 **/.cache/**
 .cache/**
+**/gen

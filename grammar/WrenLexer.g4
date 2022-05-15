@@ -16,8 +16,6 @@ IS: 'is';
 NULL: 'null';
 RETURN: 'return';
 STATIC: 'static';
-SUPER: 'super';
-THIS: 'this';
 TRUE: 'true';
 VAR: 'var';
 WHILE: 'while';
@@ -33,7 +31,6 @@ COMMA: ',';
 DOT: '.';
 
 HASH: '#';
-ASSIGN: '=';
 GT: '>';
 LT: '<';
 BANG: '!';
@@ -56,6 +53,7 @@ BITAND: '&';
 BITOR: '|';
 CARET: '^';
 MOD: '%';
+ASSIGN: '=';
 ADD_ASSIGN: '+=';
 SUB_ASSIGN: '-=';
 MUL_ASSIGN: '*=';
@@ -65,23 +63,27 @@ OR_ASSIGN: '|=';
 XOR_ASSIGN: '^=';
 MOD_ASSIGN: '%=';
 LSHIFT_ASSIGN: '<<=';
+LSHIFT : '<<';
+RSHIFT : '>>';
 RSHIFT_ASSIGN: '>>=';
 URSHIFT_ASSIGN: '>>>=';
-RANGE_OUT:           '...';
+ELLIPSIS_OUT:           '...';
 ELLIPSIS_IN:           '..';
 
 IDENTIFIER: Letter LetterOrDigit*;
 
-DECIMAL_LITERAL:    ('0' | [1-9] (Digits? | '_'+ Digits));
+DECIMAL_LITERAL:    SUB? ('0' | [1-9] (Digits? | '_'+ Digits));
 HEX_LITERAL:        '0' [xX] [0-9a-fA-F] ([0-9a-fA-F_]* [0-9a-fA-F])?;
 OCT_LITERAL:        '0' '_'* [0-7] ([0-7_]* [0-7])? [lL]?;
 BINARY_LITERAL:     '0' [bB] [01] ([01_]* [01])? [lL]?;
 
-FLOAT_LITERAL:      (Digits '.' Digits? | '.' Digits) ExponentPart? [fFdD]?
-             |       Digits (ExponentPart [fFdD]? | [fFdD])
+FLOAT_LITERAL:      SUB? (Digits '.' Digits | '.' Digits) ExponentPart? [fFdD]?
+             |      SUB? Digits (ExponentPart [fFdD]? | [fFdD])
              ;
 
 HEX_FLOAT_LITERAL:  '0' [xX] (HexDigits '.'? | HexDigits? '.' HexDigits) [pP] [+-]? Digits [fFdD]?;
+
+
 
 CHAR_LITERAL:       '\'' (~['\\\r\n] | EscapeSequence) '\'';
 
@@ -99,7 +101,6 @@ WS: [ \t\r\n\u000C]+ -> channel(HIDDEN);
 COMMENT: '/*' .*? '*/' -> channel(2);
 LINE_COMMENT: '//' ~[\r\n]* -> channel(2);
 ERRCHAR: . -> channel(HIDDEN);
-
 
 fragment ExponentPart
     : [eE] [+-]? Digits
@@ -120,5 +121,4 @@ fragment LetterOrDigit: Letter | [0-9];
 fragment Letter:
 	[a-zA-Z_]
 	| ~[\u0000-\u007F\uD800-\uDBFF] // covers all characters above 0x7F which are not a surrogate
-	| [\uD800-\uDBFF] [\uDC00-\uDFFF];
-// covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
+	| [\uD800-\uDBFF] [\uDC00-\uDFFF]; // covers UTF-16 surrogate pairs encodings for U+10000 to U+10FFFF
