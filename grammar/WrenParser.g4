@@ -1,4 +1,31 @@
- parser grammar WrenParser;
+/*
+ [The "BSD licence"]
+ Copyright (c) 2022 Boris Zhguchev
+ All rights reserved.
+
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+parser grammar WrenParser;
 
 options { tokenVocab=WrenLexer; }
 
@@ -6,7 +33,7 @@ options { tokenVocab=WrenLexer; }
 script: fileAtom+ EOF;
 
 fileAtom
-    : class
+    : classDefinition
     | function
     | importModule
     | statement
@@ -33,13 +60,13 @@ assignOp
 
 
 // flow
-if: ifCond bodyFlow elseIf* else?;
+ifSt: ifCond bodyFlow elseIf* elseSt?;
 ifCond: IF LPAREN expression RPAREN;
 elseIf: ELSE ifCond bodyFlow;
-else : ELSE bodyFlow;
+elseSt : ELSE bodyFlow;
 
-while: WHILE LPAREN (expression | assignment) RPAREN bodyFlow;
-for: FOR LPAREN id IN expression RPAREN bodyFlow;
+whileSt: WHILE LPAREN (expression | assignment) RPAREN bodyFlow;
+forSt: FOR LPAREN id IN expression RPAREN bodyFlow;
 
 bodyFlow
     : block
@@ -51,19 +78,19 @@ statement
     : expression
     | assignment
     | assignmentNull
-    | if
-    | while
-    | for
+    | ifSt
+    | whileSt
+    | forSt
     | block
-    | return
+    | returnSt
     ;
 
 lambdaParameters: BITOR (id (COMMA id)*) BITOR;
 block: LBRACE lambdaParameters? statement* RBRACE;
-return: RETURN expression;
+returnSt: RETURN expression;
 
 // class
-class: attributes? FOREIGN? CLASS  id inheritance? LBRACE classBody RBRACE;
+classDefinition: attributes? FOREIGN? CLASS  id inheritance? LBRACE classBody RBRACE;
 inheritance: IS id ;
 
 // class atributes
@@ -154,26 +181,31 @@ callHead
     ;
 // expressions
 expression
-    : expression logic
-    | expression arithBit
-    | expression arithShift
-    | expression arithRange
-    | expression arithAdd
-    | expression arithMul
-    | expression DOT call
-    | expression IS expression
+    : expression compoundExpression
     | BANG expression
     | LPAREN expression  RPAREN
-    | expression elvis
     | atomExpression
     ;
+
+compoundExpression
+     : logic
+     | arithBit
+     | arithShift
+     | arithRange
+     | arithAdd
+     | arithMul
+     | DOT call
+     | IS expression
+     | elvis
+     ;
+
 atomExpression
     : id
-    | bool
-    | char
-    | string
-    | num
-    | null
+    | boolE
+    | charE
+    | stringE
+    | numE
+    | nullE
     | listInit
     | mapInit
     | call
@@ -191,13 +223,13 @@ listInit: LBRACK enumeration? RBRACK;
 mapInit: LBRACE pairEnumeration? RBRACE;
 elem
     : id
-    | string
+    | stringE
     | call
     ;
 collectionElem: elem listInit ;
 rangeExpression
     : id
-    | num
+    | numE
     | call
     ;
 // arithmetic expressions
@@ -227,13 +259,13 @@ elvis: QUESTION expression COLON expression;
 
 // primitives
 id: IDENTIFIER;
-bool: TRUE | FALSE ;
-char: CHAR_LITERAL;
-string: STRING_LITERAL | TEXT_BLOCK ;
-num
+boolE: TRUE | FALSE ;
+charE: CHAR_LITERAL;
+stringE: STRING_LITERAL | TEXT_BLOCK ;
+numE
     : DECIMAL_LITERAL
     | HEX_LITERAL
     | FLOAT_LITERAL
     | HEX_FLOAT_LITERAL
     ;
-null: NULL;
+nullE: NULL;
