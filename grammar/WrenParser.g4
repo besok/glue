@@ -29,7 +29,6 @@ parser grammar WrenParser;
 
 options { tokenVocab=WrenLexer; }
 
-
 script: fileAtom+ EOF;
 
 fileAtom
@@ -41,8 +40,8 @@ fileAtom
     ;
 
 // assignment
-assignment: VAR? expression assignOp (expression | assignment+);
-assignmentNull: VAR id;
+assignment: VAR_T? expression assignOp (expression | assignment+);
+assignmentNull: VAR_T id;
 assignOp
     : ASSIGN
     | ADD_ASSIGN
@@ -60,18 +59,14 @@ assignOp
 
 
 // flow
-ifSt: ifCond bodyFlow elseIf* elseSt?;
-ifCond: IF LPAREN expression RPAREN;
-elseIf: ELSE ifCond bodyFlow;
-elseSt : ELSE bodyFlow;
+ifSt: ifCond statement elseIf* elseSt?;
+ifCond: IF_T LPAREN expression RPAREN;
+elseIf: ELSE_T ifCond statement;
+elseSt : ELSE_T statement;
 
-whileSt: WHILE LPAREN (expression | assignment) RPAREN bodyFlow;
-forSt: FOR LPAREN id IN expression RPAREN bodyFlow;
+whileSt: WHILE_T LPAREN (expression | assignment) RPAREN statement;
+forSt: FOR_T LPAREN id IN expression RPAREN statement;
 
-bodyFlow
-    : block
-    | statement
-    ;
 
 // statements
 statement
@@ -87,10 +82,10 @@ statement
 
 lambdaParameters: BITOR (id (COMMA id)*) BITOR;
 block: LBRACE lambdaParameters? statement* RBRACE;
-returnSt: RETURN expression;
+returnSt: RETURN_T expression;
 
 // class
-classDefinition: attributes? FOREIGN? CLASS  id inheritance? LBRACE classBody RBRACE;
+classDefinition: attributes? FOREIGN_T? CLASS_T  id inheritance? LBRACE classBody RBRACE;
 inheritance: IS id ;
 
 // class atributes
@@ -106,19 +101,18 @@ groupAttribute:HASH BANG? id LPAREN attributeValue (COMMA attributeValue)* RPARE
 // class body
 classBody:(attributes? classBodyTpe? classStatement)*;
 classBodyTpe
-    : FOREIGN
-    | STATIC
-    | STATIC FOREIGN
-    | FOREIGN STATIC
+    : FOREIGN_T
+    | STATIC_T
+    | STATIC_T FOREIGN_T
+    | FOREIGN_T STATIC_T
     ;
 // class statement
 classStatement
     : function
-    | classGetter
+    | classOpGetter
     | classSetter
     | classSubscriptGet
     | classSubscriptSet
-    | classOpGetter
     | classOpSetter
     | classConstructor
     ;
@@ -150,15 +144,13 @@ operatorSetter
     | GE
     | NOTEQUAL
     | IS
-    | id
     ;
-classOpGetter: operatorGetter block;
+classOpGetter: operatorGetter block?;
 classOpSetter: operatorSetter oneArgument block;
 oneArgument: LPAREN id RPAREN;
 subscript: LBRACK enumeration RBRACK;
 classSubscriptGet:  subscript block;
 classSubscriptSet:  subscript ASSIGN oneArgument block;
-classGetter: id block?;
 classSetter: id assignmentSetter block;
 assignmentSetter:ASSIGN oneArgument;
 arguments: LPAREN (id (COMMA id)*)? RPAREN;
@@ -166,24 +158,19 @@ arguments: LPAREN (id (COMMA id)*)? RPAREN;
 function: id arguments block?;
 
 // imports
-importModule: IMPORT STRING_LITERAL importVariables?;
+importModule: IMPORT_T STRING_LITERAL importVariables?;
 importVariable: id (AS id)?;
-importVariables: FOR importVariable (COMMA importVariable);
+importVariables: FOR_T importVariable (COMMA importVariable);
 
 // call
-call: callHead (DOT call)*;
-callBlock: id block;
-callSignature: id LPAREN enumeration? RPAREN;
-callHead
-    : callSignature
-    | callBlock
-    | id
-    ;
+call: id (callInvoke | block)? (DOT call)*;
+callInvoke:(LPAREN enumeration? RPAREN) ;
+
 // expressions
 expression
     : expression compoundExpression
     | BANG expression
-    | LPAREN expression  RPAREN
+    | LPAREN expression RPAREN
     | atomExpression
     ;
 
@@ -200,8 +187,7 @@ compoundExpression
      ;
 
 atomExpression
-    : id
-    | boolE
+    : boolE
     | charE
     | stringE
     | numE
@@ -211,8 +197,8 @@ atomExpression
     | call
     | range
     | collectionElem
-    | BREAK
-    | CONTINUE
+    | BREAK_T
+    | CONTINUE_T
     | importModule
     | SUB atomExpression
     ;
@@ -222,15 +208,13 @@ range:rangeExpression (ELLIPSIS_IN | ELLIPSIS_OUT) rangeExpression;
 listInit: LBRACK enumeration? RBRACK;
 mapInit: LBRACE pairEnumeration? RBRACE;
 elem
-    : id
+    : call
     | stringE
-    | call
     ;
 collectionElem: elem listInit ;
 rangeExpression
-    : id
+    : call
     | numE
-    | call
     ;
 // arithmetic expressions
 arithMul: (MUL | DIV | MOD) expression;
@@ -259,7 +243,7 @@ elvis: QUESTION expression COLON expression;
 
 // primitives
 id: IDENTIFIER;
-boolE: TRUE | FALSE ;
+boolE: TRUE_T | FALSE_T ;
 charE: CHAR_LITERAL;
 stringE: STRING_LITERAL | TEXT_BLOCK ;
 numE
@@ -268,4 +252,4 @@ numE
     | FLOAT_LITERAL
     | HEX_FLOAT_LITERAL
     ;
-nullE: NULL;
+nullE: NULL_T;

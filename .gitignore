@@ -66,3 +66,5 @@ test/test_runner
 **/.cache/**
 .cache/**
 **/gen
+**/generated
+Testing

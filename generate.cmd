@@ -6,5 +6,5 @@
 
 :: Download the ANLTR jar and place it in the same folder as this script (or adjust the LOCATION var accordingly).
 
-set LOCATION=thirdparty/antlr/antlr-4.9.2-complete.jar
+set LOCATION=thirdparty/antlr/antlr-4.10.1-complete.jar
 java -jar %LOCATION% -Dlanguage=Cpp -listener -visitor -o generated/ -package wrenparser grammar/WrenLexer.g4 grammar/WrenParser.g4
